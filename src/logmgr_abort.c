@@ -208,7 +208,7 @@ static bool _logmgr_tsl_cb(fdb_tsl_t tsl, void *arg)
     int fd = *((int *) arg);
     struct fdb_blob blob;
     size_t data_len = 0;
-    char data[LOGMGR_FLASHDB_MAX_LEN] = { 0 };
+    static char data[LOGMGR_FLASHDB_MAX_LEN] = { 0 };
 
     /* get blob data by tsl data */
     fdb_blob_make(&blob, data, tsl->log_len);
