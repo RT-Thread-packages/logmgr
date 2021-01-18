@@ -85,6 +85,11 @@ RT_WEAK rt_err_t logmgr_exception_hook(void *context)
 {
     volatile uint8_t _continue = 1;
 
+#ifdef LOGMGR_USING_ULOG_FILE
+    extern int ulog_file_backend_deinit(void);
+    ulog_file_backend_deinit();
+#endif
+
     /* set console device to new customize device */
     _logmgr_console_switch(&g_console_dev);
 
@@ -122,6 +127,11 @@ RT_WEAK rt_err_t logmgr_exception_hook(void *context)
 RT_WEAK void logmgr_assert_hook(const char *ex, const char *func, rt_size_t line)
 {
     volatile uint8_t _continue = 1;
+
+#ifdef LOGMGR_USING_ULOG_FILE
+    extern int ulog_file_backend_deinit(void);
+    ulog_file_backend_deinit();
+#endif
 
     /* set console device to new customize device */
     _logmgr_console_switch(&g_console_dev);
@@ -208,7 +218,7 @@ static bool _logmgr_tsl_cb(fdb_tsl_t tsl, void *arg)
     int fd = *((int *) arg);
     struct fdb_blob blob;
     size_t data_len = 0;
-    char data[LOGMGR_FLASHDB_MAX_LEN] = { 0 };
+    static char data[LOGMGR_FLASHDB_MAX_LEN] = { 0 };
 
     /* get blob data by tsl data */
     fdb_blob_make(&blob, data, tsl->log_len);

@@ -11,7 +11,7 @@
 #include <rtthread.h>
 #include <logmgr.h>
 
-#ifdef PKG_USING_ULOG_FILE
+#ifdef LOGMGR_USING_ULOG_FILE
 #include <ulog_file.h>
 #endif
 
@@ -32,7 +32,7 @@ int logmgr_init(void)
         return -1;
     }
 
-#ifdef PKG_USING_ULOG_FILE
+#ifdef LOGMGR_USING_ULOG_FILE
     ulog_file_backend_init();
 #endif
 #ifdef LOGMGR_USING_ABORT
