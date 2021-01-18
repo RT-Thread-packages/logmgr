@@ -43,6 +43,7 @@ RT-Thread online packages
         [*]     kernel running log support
         [*]     system load monitor log support
         [*]     system memory log support
+        [ ]   Enable samples
             Version (latest)  --->
 ```
 
@@ -57,6 +58,7 @@ RT-Thread online packages
   - **kernel running log support**：开启系统异常后系统运行日志打印
   - **system load monitor log support**：开启系统异常系统负荷监视器打印
   - **system memory log support**：开启系统异常后系统内存相关信息日志打印
+- **Enable samples**：开启示例文件
 
 ## 3、使用说明
 
