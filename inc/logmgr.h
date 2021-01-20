@@ -11,8 +11,8 @@
 #ifndef _LOGMGR_H_
 #define _LOGMGR_H_
 
-#define ULOGMGR_SW_VERSION      "0.0.1"
-#define ULOGMGR_SW_VERSION_NUM  0x000001
+#define ULOGMGR_SW_VERSION      "1.0.0"
+#define ULOGMGR_SW_VERSION_NUM  0x010000
 
 int logmgr_init(void);
 int logmgr_deinit(void);
