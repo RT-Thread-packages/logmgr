@@ -62,12 +62,12 @@ static void _logmgr_memory_log(void);
 static void _logmgr_console_switch(rt_device_t device);
 void rt_hw_exception_install(rt_err_t (*exception_handle)(void *context));
 
-static void printf_time_log(void)
+static void print_time_log(void)
 {
     rt_kprintf("Logmgr Abort Start %s %s\n", __DATE__, __TIME__);
 }
 
-static void printf_second_header_log(const char *second_name)
+static void print_second_header_log(const char *second_name)
 {
     rt_kprintf("\n/******  %.*s  ******/\n", rt_strlen(second_name), second_name);
 }
@@ -94,13 +94,13 @@ RT_WEAK rt_err_t logmgr_exception_hook(void *context)
     _logmgr_console_switch(&g_console_dev);
 
     /* show abort start time */
-    printf_time_log();
+    print_time_log();
 
 #ifdef LOGMGR_USING_CMBACKTRACE
     print_header_log("CmBacktrace Log");
     /* cmbacktrace exception hook */
-    extern rt_err_t exception_hook(void *context);
-    exception_hook(context);
+    extern void rt_cm_backtrace_exception_hook(void *context);
+    rt_cm_backtrace_exception_hook(context);
 #endif
 #ifdef LOGMGR_USING_IPC_LOG
     print_header_log("System IPC Log");
@@ -137,13 +137,13 @@ RT_WEAK void logmgr_assert_hook(const char *ex, const char *func, rt_size_t line
     _logmgr_console_switch(&g_console_dev);
 
     /* show abort start time */
-    printf_time_log();
+    print_time_log();
 
 #ifdef PKG_USING_CMBACKTRACE
     print_header_log("CmBacktrace Log");
     /* cmbacktrace assert hook */
-    extern void assert_hook(const char* ex, const char* func, rt_size_t line);
-    assert_hook(ex, func, line);
+    extern void rt_cm_backtrace_assert_hook(const char* ex, const char* func, rt_size_t line);
+    rt_cm_backtrace_assert_hook(ex, func, line);
 #endif
 
     while (_continue == 1);
@@ -153,7 +153,7 @@ RT_WEAK void logmgr_assert_hook(const char *ex, const char *func, rt_size_t line
 static void _logmgr_memory_log(void)
 {
 #ifdef RT_USING_HEAP
-    printf_second_header_log("sys memory log");
+    print_second_header_log("sys memory log");
 #ifdef RT_USING_MEMHEAP_AS_HEAP
     extern void list_memheap(void);
     list_memheap();
@@ -164,7 +164,7 @@ static void _logmgr_memory_log(void)
 #endif /* RT_USING_HEAP */
 
 #ifdef PKG_JMEM_STATS
-    printf_second_header_log("js heap log");
+    print_second_header_log("js heap log");
     extern void jmem_heap(void);
     jmem_heap();
 #endif
@@ -176,27 +176,27 @@ static void _logmgr_memory_log(void)
 static void _logmgr_ipc_log(void)
 {
 #ifdef RT_USING_SEMAPHORE
-    printf_second_header_log("semaphore log");
+    print_second_header_log("semaphore log");
     extern long list_sem(void);
     list_sem();
 #endif
 #ifdef RT_USING_EVENT
-    printf_second_header_log("event log");
+    print_second_header_log("event log");
     extern long list_event(void);
     list_event();
 #endif
 #ifdef RT_USING_MUTEX
-    printf_second_header_log("mutex log");
+    print_second_header_log("mutex log");
     extern long list_mutex(void);
     list_mutex();
 #endif
 #ifdef RT_USING_MAILBOX
-    printf_second_header_log("mailbox log");
+    print_second_header_log("mailbox log");
     extern long list_mailbox(void);
     list_mailbox();
 #endif
 #ifdef RT_USING_MESSAGEQUEUE
-    printf_second_header_log("messagqueue log");
+    print_second_header_log("messagqueue log");
     long list_msgqueue(void);
     list_msgqueue();
 #endif
