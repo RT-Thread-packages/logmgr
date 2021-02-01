@@ -12,10 +12,11 @@
 
 #include <rtthread.h>
 #include <rtdevice.h>
-#include <sys/time.h>
 
+#ifdef LOGMGR_ABORT_STORG
 #include <dfs.h>
 #include <dfs_posix.h>
+#endif
 
 #include <logmgr.h>
 
@@ -33,7 +34,7 @@
 #include <sys_load_monitor.h>
 #endif
 #define LOGMGR_CONSOLE_NAME            "logmgr"
-#ifdef PKG_USING_FLASHDB
+#ifdef LOGMGR_ABORT_STORG
 #include <flashdb.h>
 #ifndef LOGMGR_FLASHDB_PART_NAME
 #define LOGMGR_FLASHDB_PART_NAME       "logmgr"
@@ -45,12 +46,12 @@
 #ifndef LOGMGR_FLASHDB_MAX_SIZE
 #define LOGMGR_FLASHDB_MAX_SIZE        65536
 #endif
-#endif /* PKG_USING_FLASHDB */
 #ifndef LOGMGR_ABORT_FILE_PATH
 #define LOGMGR_ABORT_FILE_PATH         "/abort.log"
 #endif
+#endif /* PKG_USING_FLASHDB */
 
-#ifdef PKG_USING_FLASHDB
+#ifdef LOGMGR_ABORT_STORG
 static struct fdb_tsdb g_tsdb;
 #endif
 static rt_bool_t is_init = RT_FALSE;
@@ -81,6 +82,26 @@ static void print_header_log(const char *log_name)
     rt_kprintf("\n");
 }
 
+static void _logmgr_abort_print(void)
+{
+#ifdef LOGMGR_USING_IPC_LOG
+    print_header_log("System IPC Log");
+    _logmgr_ipc_log();
+#endif
+#ifdef LOGMGR_USING_KDB
+    print_header_log("Kernel Running Log");
+    kdb_sys_stop_dump();
+#endif
+#ifdef LOGMGR_USING_SYS_LOAD_MONITOR
+    print_header_log("System Load Log");
+    sys_load_monitor_dump();
+#endif
+#ifdef LOGMGR_USING_MEMORY_LOG
+    print_header_log("System Memory Log");
+    _logmgr_memory_log();
+#endif
+}
+
 RT_WEAK rt_err_t logmgr_exception_hook(void *context)
 {
     volatile uint8_t _continue = 1;
@@ -102,22 +123,9 @@ RT_WEAK rt_err_t logmgr_exception_hook(void *context)
     extern void rt_cm_backtrace_exception_hook(void *context);
     rt_cm_backtrace_exception_hook(context);
 #endif
-#ifdef LOGMGR_USING_IPC_LOG
-    print_header_log("System IPC Log");
-    _logmgr_ipc_log();
-#endif
-#ifdef LOGMGR_USING_KDB
-    print_header_log("Kernel Running Log");
-    kdb_sys_stop_dump();
-#endif
-#ifdef LOGMGR_USING_SYS_LOAD_MONITOR
-    print_header_log("System Load Log");
-    sys_load_monitor_dump();
-#endif
-#ifdef LOGMGR_USING_MEMORY_LOG
-    print_header_log("System Memory Log");
-    _logmgr_memory_log();
-#endif
+
+    /* hardfault log print */
+    _logmgr_abort_print();
 
     while (_continue == 1);
 
@@ -139,12 +147,17 @@ RT_WEAK void logmgr_assert_hook(const char *ex, const char *func, rt_size_t line
     /* show abort start time */
     print_time_log();
 
+    rt_kprintf("(%s) assertion failed at function:%s, line number:%d \n", ex, func, line);
+
 #ifdef PKG_USING_CMBACKTRACE
     print_header_log("CmBacktrace Log");
     /* cmbacktrace assert hook */
     extern void rt_cm_backtrace_assert_hook(const char* ex, const char* func, rt_size_t line);
     rt_cm_backtrace_assert_hook(ex, func, line);
 #endif
+
+    /* assert log print */
+    _logmgr_abort_print();
 
     while (_continue == 1);
 }
@@ -203,14 +216,13 @@ static void _logmgr_ipc_log(void)
 }
 #endif /* LOGMGR_USING_IPC_LOG */
 
-#ifdef PKG_USING_FLASHDB
+#ifdef LOGMGR_ABORT_STORG
 /* flashdb get time function */
 static fdb_time_t _logmgr_get_time(void)
 {
     static fdb_time_t count = 0;
     return count++;
 }
-#endif /* PKG_USING_FLASHDB */
 
 /* flashdb iterator callback function */
 static bool _logmgr_tsl_cb(fdb_tsl_t tsl, void *arg)
@@ -228,10 +240,12 @@ static bool _logmgr_tsl_cb(fdb_tsl_t tsl, void *arg)
     write(fd, data, data_len);
     return false;
 }
+#endif /* LOGMGR_ABORT_STORG */
+
 /* logmgr support packages initialized */
 static int _logmgr_pkgs_init(void)
 {
-#ifdef PKG_USING_FLASHDB
+#ifdef LOGMGR_ABORT_STORG
     uint32_t sec_size = LOGMGR_FLASHDB_SECTOR_SIZE;
     uint32_t db_size  = LOGMGR_FLASHDB_MAX_SIZE;
     fdb_tsdb_t tsdb = &g_tsdb;
@@ -266,7 +280,8 @@ static int _logmgr_pkgs_init(void)
         fdb_tsl_clean(tsdb);
         close(fd);
     }
-#endif /* PKG_USING_FLASHDB */
+#endif /* LOGMGR_ABORT_STORG */
+
 #ifdef LOGMGR_USING_CMBACKTRACE
     extern int rt_cm_backtrace_init(void);
     rt_cm_backtrace_init();
@@ -285,7 +300,7 @@ static int _logmgr_pkgs_init(void)
 static rt_size_t _console_write(rt_device_t dev, rt_off_t pos, const void *buffer,
                         rt_size_t size)
 {
-#ifdef PKG_USING_FLASHDB
+#ifdef LOGMGR_ABORT_STORG
     struct fdb_blob blob;
 
     if (!is_init)

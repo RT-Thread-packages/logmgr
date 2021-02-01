@@ -3,8 +3,11 @@
 from building import *
 
 cwd = GetCurrentDir()
-src = Glob('src/*.c')
+src = ['src/logmgr.c']
 CPPPATH = [cwd + '/inc']
+
+if GetDepend(['LOGMGR_USING_ABORT']):
+    src += ['src/logmgr_abort.c']
 
 if GetDepend(['LOGMGR_USING_SAMPLES']):
     src += Glob('samples/*.c')
