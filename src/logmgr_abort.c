@@ -65,7 +65,15 @@ void rt_hw_exception_install(rt_err_t (*exception_handle)(void *context));
 
 static void print_time_log(void)
 {
-    rt_kprintf("Logmgr Abort Start %s %s\n", __DATE__, __TIME__);
+    /* output current time */
+#ifdef RT_USING_RTC
+#include <sys/time.h>
+    time_t now;
+    now = time(RT_NULL);
+    rt_kprintf("Logmgr Abort Start at %s", ctime(&now));
+#else
+    rt_kprintf("Logmgr Abort Start at %d tick\n", rt_tick_get());
+#endif
 }
 
 static void print_second_header_log(const char *second_name)
@@ -99,6 +107,12 @@ static void _logmgr_abort_print(void)
 #ifdef LOGMGR_USING_MEMORY_LOG
     print_header_log("System Memory Log");
     _logmgr_memory_log();
+#endif
+
+//TODO Add more filesystem section
+#ifdef RT_USING_DFS
+    extern int list_fd(void);
+    list_fd();
 #endif
 }
 
